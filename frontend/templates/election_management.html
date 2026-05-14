@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Election Management - Secured Voting System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-4">Add Candidate</h2>
+                <form method="POST" action="{{ url_for('election_management') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Candidate Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="party" class="form-label">Party Name</label>
+                        <input type="text" class="form-control" id="party" name="party" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="photo" class="form-label">Candidate Photo</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" required>
+                        <div class="form-text">Upload a clear photo of the candidate (max 5MB).</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Add Candidate
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="card-title h4 mb-4">Registered Candidates</h2>
+                
+                {% if candidates %}
+                <div class="row g-4">
+                    {% for candidate in candidates %}
+                    <div class="col-md-6">
+                        <div class="card candidate-card h-100">
+                            <div class="card-body text-center">
+                                {% if candidate.photo_path %}
+                                <img src="{{ url_for('static', filename=candidate.photo_path) }}" 
+                                     class="candidate-image" alt="{{ candidate.name }}"
+                                     style="max-width: 200px; height: auto; object-fit: cover;"
+                                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_candidate.jpg') }}'">
+                                {% else %}
+                                <i class="fas fa-user-circle fa-6x mb-3 text-secondary"></i>
+                                {% endif %}
+                                
+                                <h3 class="h5">{{ candidate.name }}</h3>
+                                <p class="text-muted">{{ candidate.party }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted">
+                    <i class="fas fa-users fa-3x mb-3"></i>
+                    <p>No candidates registered yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const photoInput = document.getElementById('photo');
+        const form = document.querySelector('form');
+        
+        if (photoInput) {
+            photoInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (!file.type.startsWith('image/')) {
+                        alert('Please upload an image file.');
+                        this.value = '';
+                    } else if (file.size > 5 * 1024 * 1024) {
+                        alert('File size should be less than 5MB.');
+                        this.value = '';
+                    }
+                }
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const nameInput = document.getElementById('name');
+                const partyInput = document.getElementById('party');
+                
+                if (nameInput.value.trim().length < 2) {
+                    e.preventDefault();
+                    alert('Candidate name must be at least 2 characters long.');
+                    return;
+                }
+                
+                if (partyInput.value.trim().length < 2) {
+                    e.preventDefault();
+                    alert('Party name must be at least 2 characters long.');
+                    return;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

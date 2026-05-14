@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Analytics - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Voter Analytics</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Gender Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Age Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Age Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ageChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- District Distribution -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">District-wise Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="districtChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voting Time Pattern -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Voting Time Pattern</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gender Distribution Chart
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Male', 'Female', 'Other'],
+            datasets: [{
+                data: [
+                    {{ stats.gender_distribution.male }},
+                    {{ stats.gender_distribution.female }},
+                    {{ stats.gender_distribution.other }}
+                ],
+                backgroundColor: ['#36a2eb', '#ff6384', '#ffce56']
+            }]
+        }
+    });
+
+    // Age Distribution Chart
+    new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: ['18-25', '26-35', '36-50', '50+'],
+            datasets: [{
+                label: 'Voters by Age Group',
+                data: [
+                    {{ stats.age_distribution['18-25'] }},
+                    {{ stats.age_distribution['26-35'] }},
+                    {{ stats.age_distribution['36-50'] }},
+                    {{ stats.age_distribution['50+'] }}
+                ],
+                backgroundColor: '#36a2eb'
+            }]
+        }
+    });
+
+    // District Distribution Chart
+    new Chart(document.getElementById('districtChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ stats.district_distribution.keys()|list|tojson }},
+            datasets: [{
+                label: 'Voters by District',
+                data: {{ stats.district_distribution.values()|list }},
+                backgroundColor: '#4bc0c0'
+            }]
+        }
+    });
+
+    // Voting Time Pattern Chart
+    new Chart(document.getElementById('timeChart'), {
+        type: 'line',
+        data: {
+            labels: {{ stats.voting_hours.keys()|list|tojson }},
+            datasets: [{
+                label: 'Votes by Hour',
+                data: {{ stats.voting_hours.values()|list }},
+                borderColor: '#36a2eb',
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

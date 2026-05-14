@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Election Results - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if not show_results %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Verify Access</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="2fa_code" class="form-label">Enter Verification Code</label>
+                            <input type="text" class="form-control" id="2fa_code" name="2fa_code" required>
+                            <div class="form-text">For testing, use code: 12345</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i> Verify
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Election Results</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="text-center mb-4">Total Votes Cast: {{ total_votes }}</h5>
+                    <div class="row">
+                        {% for candidate in candidates %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if candidate.photo_path %}
+                                        <img src="{{ url_for('static', filename=candidate.photo_path) }}" 
+                                             alt="{{ candidate.name }}" 
+                                             class="rounded-circle me-3"
+                                             style="width: 64px; height: 64px; object-fit: cover;">
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-0">{{ candidate.name }}</h5>
+                                            <p class="text-muted mb-0">{{ candidate.party }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="progress mb-2" style="height: 25px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ (candidate.votes / total_votes * 100) if total_votes > 0 else 0 }}%">
+                                            {{ candidate.votes }} votes
+                                        </div>
+                                    </div>
+                                    <p class="text-end mb-0">
+                                        {{ "%.1f"|format(candidate.votes / total_votes * 100 if total_votes > 0 else 0) }}%
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if statistics %}
+    <!-- Statistics and Analysis Section -->
+    <div class="row mb-4">
+        <!-- Voter Turnout Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Voter Turnout</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h2 class="display-4">{{ "%.1f"|format(statistics.turnout_percentage) }}%</h2>
+                        <p class="text-muted">{{ statistics.voted_voters }} out of {{ statistics.total_voters }} registered voters</p>
+                    </div>
+                    <canvas id="turnoutChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Age Distribution Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Age Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ageChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Distribution Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Gender Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- District-wise Turnout Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">District-wise Turnout</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="districtChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Voting Pattern Card -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Hourly Voting Pattern</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="hourlyChart" width="800" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="text-center">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if show_results and statistics and chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Turnout Doughnut Chart
+    const votedCount = {{ statistics.voted_voters|tojson|safe }};
+    const totalVoters = {{ statistics.total_voters|tojson|safe }};
+    new Chart(document.getElementById('turnoutChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Voted', 'Not Voted'],
+            datasets: [{
+                data: [votedCount, totalVoters - votedCount],
+                backgroundColor: ['#28a745', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Age Distribution Chart
+    new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.age_groups.labels|tojson|safe }},
+            datasets: [{
+                label: 'Voted',
+                data: {{ chart_data.age_groups.voted_data|tojson|safe }},
+                backgroundColor: '#28a745'
+            }, {
+                label: 'Total',
+                data: {{ chart_data.age_groups.total_data|tojson|safe }},
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Gender Distribution Chart
+    new Chart(document.getElementById('genderChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ chart_data.gender_stats.labels|tojson|safe }},
+            datasets: [{
+                data: {{ chart_data.gender_stats.data|tojson|safe }},
+                backgroundColor: ['#007bff', '#dc3545', '#ffc107']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // District-wise Turnout Chart
+    new Chart(document.getElementById('districtChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.district_stats.labels|tojson|safe }},
+            datasets: [{
+                label: 'Turnout %',
+                data: {{ chart_data.district_stats.data|tojson|safe }},
+                backgroundColor: '#17a2b8'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Hourly Voting Pattern Chart
+    new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.hourly_voting.labels|tojson|safe }},
+            datasets: [{
+                label: 'Votes per Hour',
+                data: {{ chart_data.hourly_voting.data|tojson|safe }},
+                borderColor: '#007bff',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

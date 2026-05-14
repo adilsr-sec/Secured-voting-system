@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Verification - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Blockchain Verification</h5>
+                    <span class="badge {% if verification_data.chain_valid %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if verification_data.chain_valid %}Valid Chain{% else %}Invalid Chain{% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Chain Overview -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Chain Overview</h6>
+                        <p class="mb-0">
+                            <strong>Total Blocks:</strong> {{ verification_data.total_blocks }}
+                        </p>
+                    </div>
+
+                    <!-- Block Details -->
+                    <div class="accordion" id="blockAccordion">
+                        {% for block in verification_data.blocks %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#block{{ block.index }}">
+                                    Block #{{ block.index }} 
+                                    <span class="badge bg-info ms-2">
+                                        {{ block.transactions.total }} Transactions
+                                    </span>
+                                </button>
+                            </h2>
+                            <div id="block{{ block.index }}" 
+                                 class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                                 data-bs-parent="#blockAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6>Block Information</h6>
+                                            <p class="mb-1">
+                                                <strong>Timestamp:</strong><br>
+                                                <code>{{ block.timestamp|format_timestamp }}</code>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Hash:</strong><br>
+                                                <code>{{ block.hash }}</code>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Previous Hash:</strong><br>
+                                                <code>{{ block.previous_hash }}</code>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Nonce:</strong> {{ block.nonce }}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Transaction Summary</h6>
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <p class="mb-1">
+                                                        <i class="fas fa-user-plus text-primary"></i>
+                                                        Registrations: {{ block.transactions.registrations }}
+                                                    </p>
+                                                    <p class="mb-1">
+                                                        <i class="fas fa-vote-yea text-success"></i>
+                                                        Votes: {{ block.transactions.votes }}
+                                                    </p>
+                                                    <p class="mb-0">
+                                                        <i class="fas fa-calculator text-info"></i>
+                                                        Total: {{ block.transactions.total }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hash Verification -->
+                                    <div class="mt-3">
+                                        <h6>Hash Verification</h6>
+                                        <div class="hash-verify">
+                                            <div class="d-flex align-items-center">
+                                                <span class="me-2">Previous Block</span>
+                                                <div class="hash-arrow">→</div>
+                                                <span class="me-2">Current Block</span>
+                                                <div class="hash-arrow">→</div>
+                                                <span>Next Block</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hash-verify {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.hash-arrow {
+    color: #007bff;
+    font-weight: bold;
+    margin: 0 10px;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0c63e4;
+}
+
+code {
+    word-break: break-all;
+    display: inline-block;
+    max-width: 100%;
+}
+</style>
+{% endblock %} 

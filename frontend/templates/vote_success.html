@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Vote Success - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <div class="success-animation mb-4">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                    <h2 class="card-title mb-4">Vote Cast Successfully!</h2>
+                    <p class="text-muted mb-4">Thank you for participating in the election. Your vote has been recorded securely.</p>
+                    <div class="progress mb-4" style="height: 4px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p class="text-muted small mb-0">Redirecting to home page...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate the progress bar
+    const progressBar = document.querySelector('.progress-bar');
+    let width = 0;
+    const interval = setInterval(() => {
+        if (width >= 100) {
+            clearInterval(interval);
+            window.location.href = "{{ url_for('index') }}";
+        } else {
+            width++;
+        }
+        progressBar.style.width = width + '%';
+    }, 30);
+
+    // Redirect after 3 seconds
+    setTimeout(() => {
+        window.location.href = "{{ url_for('index') }}";
+    }, 3000);
+});
+</script>
+
+<style>
+.success-animation {
+    font-size: 5rem;
+    animation: scale-in 0.5s ease-out;
+}
+
+@keyframes scale-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 2px;
+}
+
+.progress-bar {
+    background-color: #198754;
+}
+</style>
+{% endblock %} 

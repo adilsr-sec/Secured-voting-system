@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Status - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Blockchain Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Chain Information</h6>
+                                    <p class="mb-1"><strong>Chain Length:</strong> {{ chain_data.length }} blocks</p>
+                                    <p class="mb-1"><strong>Chain Valid:</strong> 
+                                        {% if chain_data.is_valid %}
+                                        <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">No</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="mb-1"><strong>Pending Transactions:</strong> {{ chain_data.pending_transactions }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Latest Block</h6>
+                                    <p class="mb-1"><strong>Block Index:</strong> {{ chain_data.latest_block.index }}</p>
+                                    <p class="mb-1"><strong>Block Hash:</strong> <code>{{ chain_data.latest_block.hash }}</code></p>
+                                    <p class="mb-1"><strong>Transactions:</strong> {{ chain_data.latest_block.transactions }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('export_blockchain') }}" class="btn btn-primary">
+                            <i class="fas fa-download"></i> Export Blockchain
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

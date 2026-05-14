@@ -1,0 +1,821 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Registration - Secure Voting System{% endblock %}
+
+{% block content %}
+<style>
+    .camera-container {
+        width: 100%;
+        max-width: 480px;
+        height: 360px;
+        margin: 0 auto;
+        position: relative;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    #video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    #canvas {
+        display: none;
+    }
+
+    .capture-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+    }
+
+    .face-guide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        border: 2px dashed #fff;
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .preview-container {
+        width: 160px;
+        height: 160px;
+        margin: 20px auto;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        display: none;
+    }
+
+    #preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .camera-controls {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .quality-indicator {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+        display: none;
+    }
+
+    .upload-preview-container {
+        width: 100%;
+        max-width: 480px;
+        height: 360px;
+        margin: 0 auto;
+        background: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .upload-preview-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+        .camera-container {
+            max-width: 100%;
+            height: 300px;
+        }
+
+        .face-guide {
+            width: 150px;
+            height: 150px;
+        }
+
+        .preview-container {
+            width: 120px;
+            height: 120px;
+        }
+    }
+
+    /* Progress bar styles */
+    .step-progress {
+        margin-bottom: 30px;
+    }
+    
+    .step-progress .step {
+        display: inline-block;
+        width: 25%;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step-progress .step-indicator {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: inline-block;
+        line-height: 30px;
+        color: #6c757d;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .step-progress .step.active .step-indicator {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .step-progress .step.completed .step-indicator {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .step-progress .step-label {
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    
+    .step-progress .progress-line {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background-color: #e9ecef;
+        transform: translateX(-50%);
+        z-index: 0;
+    }
+    
+    .step.completed .progress-line {
+        background-color: #28a745;
+    }
+    
+    .form-section {
+        display: none;
+    }
+    
+    .form-section.active {
+        display: block;
+    }
+
+    /* Real-time validation styles */
+    .validation-feedback {
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+    
+    .validation-feedback.valid {
+        color: #28a745;
+    }
+    
+    .validation-feedback.invalid {
+        color: #dc3545;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 5px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Voter Registration</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Progress Bar -->
+                    <div class="step-progress">
+                        <div class="step active" data-step="1">
+                            <div class="step-indicator">1</div>
+                            <div class="progress-line"></div>
+                            <div class="step-label">Personal Info</div>
+                        </div>
+                        <div class="step" data-step="2">
+                            <div class="step-indicator">2</div>
+                            <div class="progress-line"></div>
+                            <div class="step-label">Contact Details</div>
+                        </div>
+                        <div class="step" data-step="3">
+                            <div class="step-indicator">3</div>
+                            <div class="progress-line"></div>
+                            <div class="step-label">Address</div>
+                        </div>
+                        <div class="step" data-step="4">
+                            <div class="step-indicator">4</div>
+                            <div class="step-label">Photo & Submit</div>
+                        </div>
+                    </div>
+
+                    <form method="POST" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
+                        <!-- Step 1: Personal Information -->
+                        <div class="form-section active" data-step="1">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name_reg" autocomplete="new-name" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="age" class="form-label">Age</label>
+                                <input type="number" class="form-control" id="age" name="age_reg" autocomplete="new-age" min="18" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender_reg" autocomplete="new-gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="aadhar" class="form-label">Aadhar Number</label>
+                                <input type="text" class="form-control" id="aadhar" name="aadhar_number_reg" 
+                                       pattern="[0-9]{12}" title="Please enter a valid 12-digit Aadhar number" autocomplete="new-aadhar" required>
+                                <div id="aadharFeedback" class="validation-feedback"></div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Contact Information -->
+                        <div class="form-section" data-step="2">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone_reg" 
+                                       pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" autocomplete="new-phone" required>
+                                <div id="phoneFeedback" class="validation-feedback"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email_reg" autocomplete="new-email" required>
+                                <div id="emailFeedback" class="validation-feedback"></div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Address Information -->
+                        <div class="form-section" data-step="3">
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <textarea class="form-control" id="address" name="address_reg" rows="2" autocomplete="new-address" required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <select class="form-select" id="state" name="state_reg" autocomplete="new-state" required>
+                                    <option value="">Select State</option>
+                                    <option value="Kerala">Kerala</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="district" class="form-label">District</label>
+                                <select class="form-select" id="district" name="district_reg" autocomplete="new-district" required>
+                                    <option value="">Select District</option>
+                                    <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                                    <option value="Kollam">Kollam</option>
+                                    <option value="Pathanamthitta">Pathanamthitta</option>
+                                    <option value="Alappuzha">Alappuzha</option>
+                                    <option value="Kottayam">Kottayam</option>
+                                    <option value="Idukki">Idukki</option>
+                                    <option value="Ernakulam">Ernakulam</option>
+                                    <option value="Thrissur">Thrissur</option>
+                                    <option value="Palakkad">Palakkad</option>
+                                    <option value="Malappuram">Malappuram</option>
+                                    <option value="Kozhikode">Kozhikode</option>
+                                    <option value="Wayanad">Wayanad</option>
+                                    <option value="Kannur">Kannur</option>
+                                    <option value="Kasaragod">Kasaragod</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="is_disabled" class="form-label">Do you have any disability?</label>
+                                <select class="form-select" id="is_disabled" name="is_disabled_reg" autocomplete="new-disabled" required>
+                                    <option value="">Please Select</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Photo & Submit -->
+                        <div class="form-section" data-step="4">
+                            <div class="mb-3">
+                                <label class="form-label">Face Photo</label>
+                                <div class="d-flex gap-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="photo_method" id="camera_method" checked>
+                                        <label class="form-check-label" for="camera_method">
+                                            <i class="fas fa-camera"></i> Take Photo with Camera
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="photo_method" id="upload_method">
+                                        <label class="form-check-label" for="upload_method">
+                                            <i class="fas fa-upload"></i> Upload Photo
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Camera Section -->
+                                <div id="camera_section" class="text-center">
+                                    <video id="video" class="img-fluid mb-3" style="max-width: 100%; display: none;"></video>
+                                    <canvas id="canvas" style="display: none;"></canvas>
+                                    <div class="preview-container" style="display: none;">
+                                        <img id="preview" class="img-fluid mb-3" alt="Captured photo">
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button type="button" id="captureBtn" class="btn btn-primary" disabled>
+                                            <i class="fas fa-camera"></i> Capture Photo
+                                        </button>
+                                        <button type="button" id="retakeBtn" class="btn btn-secondary" style="display: none;">
+                                            <i class="fas fa-redo"></i> Retake
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Upload Section -->
+                                <div id="upload_section" class="text-center" style="display: none;">
+                                    <input type="file" id="photo_upload" accept="image/*" style="display: none;">
+                                    <div id="upload_preview" style="display: none;">
+                                        <img id="uploaded-image" class="img-fluid mb-3" alt="Uploaded photo">
+                                    </div>
+                                    <button type="button" id="upload-btn" class="btn btn-primary">
+                                        <i class="fas fa-upload"></i> Choose Photo
+                                    </button>
+                                </div>
+
+                                <input type="hidden" id="photo" name="photo" required>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" id="submitBtn" class="btn btn-success" disabled>
+                                    <i class="fas fa-check-circle"></i> Submit Registration
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+                            <button type="button" class="btn btn-danger" id="resetBtn">Reset Form</button>
+                            <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+                            <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Submit Registration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Global variables
+    let stream = null;
+    let photoTaken = false;
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    // Form navigation functions
+    function updateFormNavigation() {
+        // Hide all sections and show current
+        document.querySelectorAll('.form-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        document.querySelector(`.form-section[data-step="${currentStep}"]`).classList.add('active');
+        
+        // Update progress bar
+        document.querySelectorAll('.step').forEach(step => {
+            const stepNum = parseInt(step.dataset.step);
+            step.classList.remove('active', 'completed');
+            if (stepNum === currentStep) {
+                step.classList.add('active');
+            } else if (stepNum < currentStep) {
+                step.classList.add('completed');
+            }
+        });
+        
+        // Update buttons
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (prevBtn) prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+        if (nextBtn) nextBtn.style.display = currentStep < totalSteps ? 'block' : 'none';
+        if (submitBtn) submitBtn.style.display = currentStep === totalSteps ? 'block' : 'none';
+    }
+
+    function validateCurrentStep() {
+        const currentSection = document.querySelector(`.form-section[data-step="${currentStep}"]`);
+        const inputs = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+        let isValid = true;
+        
+        inputs.forEach(input => {
+            if (!input.checkValidity()) {
+                input.reportValidity();
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+
+    function saveProgress() {
+        const formData = new FormData(document.getElementById('registrationForm'));
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+        data.currentStep = currentStep;
+        localStorage.setItem('voterRegistrationDraft', JSON.stringify(data));
+    }
+
+    function loadProgress() {
+        const saved = localStorage.getItem('voterRegistrationDraft');
+        if (saved) {
+            const data = JSON.parse(saved);
+            Object.keys(data).forEach(key => {
+                if (key !== 'currentStep') {
+                    const input = document.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        input.value = data[key];
+                    }
+                }
+            });
+            if (data.currentStep) {
+                currentStep = parseInt(data.currentStep);
+                updateFormNavigation();
+            }
+        }
+    }
+
+    // Camera functions
+    async function setupCamera() {
+        try {
+            if (stream) {
+                stopCamera();
+            }
+            
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(device => device.kind === 'videoinput');
+            
+            let cameraOptions = {
+                video: {
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 },
+                    facingMode: isMobileDevice() ? "user" : "user",
+                    aspectRatio: { ideal: 1.333333 },
+                    frameRate: { ideal: 30 }
+                },
+                audio: false
+            };
+            
+            stream = await navigator.mediaDevices.getUserMedia(cameraOptions);
+            const video = document.getElementById('video');
+            video.srcObject = stream;
+            video.style.display = 'block';
+            document.getElementById('captureBtn').disabled = false;
+            
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play();
+                    resolve();
+                };
+            });
+            
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            let errorMessage = 'Error accessing camera. ';
+            if (err.name === 'NotAllowedError') {
+                errorMessage += 'Please grant camera permissions in your browser settings.';
+            } else if (err.name === 'NotFoundError') {
+                errorMessage += 'No camera found. Please make sure your camera is connected.';
+            } else if (err.name === 'NotReadableError') {
+                errorMessage += 'Camera is in use by another application.';
+            } else {
+                errorMessage += 'Please try uploading a photo instead.';
+            }
+            alert(errorMessage);
+            document.getElementById('upload_method').checked = true;
+            togglePhotoMethod();
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            const video = document.getElementById('video');
+            video.srcObject = null;
+            video.style.display = 'none';
+        }
+    }
+
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+
+    function togglePhotoMethod() {
+        const cameraMethod = document.getElementById('camera_method');
+        const cameraSection = document.getElementById('camera_section');
+        const uploadSection = document.getElementById('upload_section');
+        
+        if (cameraMethod.checked) {
+            cameraSection.style.display = 'block';
+            uploadSection.style.display = 'none';
+            setupCamera();
+            photoTaken = false;
+            document.getElementById('submitBtn').disabled = true;
+        } else {
+            cameraSection.style.display = 'none';
+            uploadSection.style.display = 'block';
+            stopCamera();
+        }
+    }
+
+    // Initialize everything when document is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        const registrationForm = document.getElementById('registrationForm');
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressSteps = document.querySelectorAll('.step');
+
+        // Clear form fields on page load
+        registrationForm.reset();
+
+        const cameraMethod = document.getElementById('camera_method');
+        const uploadMethod = document.getElementById('upload_method');
+        const photoUpload = document.getElementById('photo_upload');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadPreview = document.getElementById('upload_preview');
+        const uploadedImage = document.getElementById('uploaded-image');
+
+        // Handle form submission
+        registrationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(registrationForm);
+
+            try {
+                const response = await fetch('/voter/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                // Create alert element
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${data.status === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    ${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                // Insert alert at the top of the form
+                registrationForm.insertBefore(alertDiv, registrationForm.firstChild);
+
+                if (data.status === 'success') {
+                    // Reset form and go back to step 1
+                    registrationForm.reset();
+                    currentStep = 1;
+                    updateFormNavigation();
+
+                    // Clear any uploaded photo preview
+                    const uploadPreview = document.getElementById('upload_preview');
+                    if (uploadPreview) {
+                        uploadPreview.style.display = 'none';
+                    }
+
+                    // Clear any camera preview
+                    const cameraPreview = document.getElementById('preview');
+                    if (cameraPreview) {
+                        cameraPreview.style.display = 'none';
+                    }
+
+                    // Stop camera if it's running
+                    if (typeof stopCamera === 'function') {
+                        stopCamera();
+                    }
+
+                    // Clear stored form data
+                    localStorage.removeItem('voterRegistrationData');
+                }
+
+                // Scroll to top to show the alert
+                window.scrollTo(0, 0);
+            } catch (error) {
+                console.error('Error:', error);
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    An error occurred while submitting the form. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                registrationForm.insertBefore(alertDiv, registrationForm.firstChild);
+                window.scrollTo(0, 0);
+            }
+        });
+
+        // Navigation button handlers
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (validateCurrentStep()) {
+                    currentStep = Math.min(currentStep + 1, totalSteps);
+                    updateFormNavigation();
+                    saveProgress();
+                }
+            });
+        }
+
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentStep = Math.max(currentStep - 1, 1);
+                updateFormNavigation();
+                saveProgress();
+            });
+        }
+
+        // Reset button handler
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+                // Reset form fields
+                registrationForm.reset();
+                
+                // Go back to step 1
+                currentStep = 1;
+                updateFormNavigation();
+                
+                // Clear any uploaded photo preview
+                const uploadPreview = document.getElementById('upload_preview');
+                if (uploadPreview) {
+                    uploadPreview.style.display = 'none';
+                }
+                
+                // Clear any camera preview
+                const cameraPreview = document.getElementById('preview');
+                if (cameraPreview) {
+                    cameraPreview.style.display = 'none';
+                }
+                
+                // Stop camera if it's running
+                if (typeof stopCamera === 'function') {
+                    stopCamera();
+                }
+                
+                // Clear stored form data
+                localStorage.removeItem('voterRegistrationData');
+                
+                // Clear any existing alerts
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => alert.remove());
+            }
+        });
+
+        // Photo method handlers
+        if (cameraMethod) {
+            cameraMethod.addEventListener('change', togglePhotoMethod);
+        }
+        if (uploadMethod) {
+            uploadMethod.addEventListener('change', togglePhotoMethod);
+        }
+
+        // Upload functionality
+        if (uploadBtn && photoUpload) {
+            uploadBtn.addEventListener('click', () => {
+                photoUpload.click();
+            });
+
+            photoUpload.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        uploadedImage.src = e.target.result;
+                        uploadPreview.style.display = 'block';
+                        photoTaken = true;
+                        document.getElementById('submitBtn').disabled = false;
+                        document.getElementById('photo').value = e.target.result;
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        // Capture photo functionality
+        const captureBtn = document.getElementById('captureBtn');
+        if (captureBtn) {
+            captureBtn.addEventListener('click', () => {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                const preview = document.getElementById('preview');
+                const previewContainer = document.querySelector('.preview-container');
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(video, 0, 0);
+
+                const photoData = canvas.toDataURL('image/jpeg', 0.9);
+
+                const base64Length = photoData.length - 'data:image/jpeg;base64,'.length;
+                const sizeInBytes = base64Length * 0.75;
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (sizeInBytes > maxSize) {
+                    alert('The captured photo is too large. Please try again with lower resolution or use the upload option.');
+                    return;
+                }
+
+                preview.src = photoData;
+                document.getElementById('photo').value = photoData;
+
+                previewContainer.style.display = 'block';
+                captureBtn.style.display = 'none';
+                document.getElementById('retakeBtn').style.display = 'inline-block';
+                photoTaken = true;
+                document.getElementById('submitBtn').disabled = false;
+                stopCamera();
+            });
+        }
+
+        // Retake photo functionality
+        const retakeBtn = document.getElementById('retakeBtn');
+        if (retakeBtn) {
+            retakeBtn.addEventListener('click', () => {
+                const previewContainer = document.querySelector('.preview-container');
+                previewContainer.style.display = 'none';
+                retakeBtn.style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'inline-block';
+                photoTaken = false;
+                document.getElementById('submitBtn').disabled = true;
+                setupCamera();
+            });
+        }
+
+        // Form submission check
+        if (registrationForm) {
+            registrationForm.addEventListener('input', saveProgress);
+        }
+
+        // Initialize camera if selected and load saved progress
+        if (cameraMethod && cameraMethod.checked) {
+            setupCamera();
+        }
+        loadProgress();
+        updateFormNavigation();
+    });
+</script>
+{% endblock %}

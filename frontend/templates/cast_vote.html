@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Cast Vote - Secured Voting System{% endblock %}
+
+{% block content %}
+<style>
+/* Custom styling for candidate selection tiles */
+.candidate-tile {
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.candidate-tile:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.form-check-input:checked + .candidate-tile {
+    border-color: var(--success);
+    background-color: rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.form-check-input {
+    display: none; /* Hide default radio button */
+}
+
+.candidate-image-wrapper {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.candidate-tile:hover .candidate-image-wrapper {
+    transform: scale(1.05);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.form-check-input:checked + .candidate-tile .candidate-image-wrapper {
+    border-color: var(--success);
+    transform: scale(1.05);
+}
+
+.selected-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--success);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.form-check-input:checked + .candidate-tile .selected-badge {
+    opacity: 1;
+    transform: scale(1);
+}
+</style>
+
+<div class="row justify-content-center animate__animated animate__fadeIn">
+    <div class="col-md-10">
+        <div class="card glass-panel">
+            <div class="card-header bg-transparent border-bottom border-secondary pt-4 pb-3 text-center">
+                <h2 class="card-title mb-0 text-white"><i class="fas fa-check-to-slot text-success me-2"></i>Official Ballot</h2>
+                <p class="text-secondary mt-2 mb-0">Please select your preferred candidate below.</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                {% if candidates %}
+                <form id="voting-form" method="POST" action="{{ url_for('cast_vote') }}">
+                    <div class="row g-4 mb-5">
+                        {% for candidate in candidates %}
+                        <div class="col-md-6 col-lg-4">
+                            <label class="w-100 position-relative" for="candidate{{ candidate.id }}">
+                                <input class="form-check-input" type="radio" 
+                                       name="candidate" id="candidate{{ candidate.id }}" 
+                                       value="{{ candidate.id }}" required>
+                                
+                                <div class="card candidate-card candidate-tile glass-panel h-100 pt-4 pb-4 animate__animated animate__zoomIn delay-{{ loop.index * 100 }}">
+                                    <div class="selected-badge"><i class="fas fa-check"></i></div>
+                                    <div class="card-body text-center">
+                                        <div class="candidate-image-wrapper">
+                                            {% if candidate.photo_path %}
+                                            <img src="{{ url_for('static', filename=candidate.photo_path) }}" 
+                                                 class="img-fluid w-100 h-100" alt="{{ candidate.name }}"
+                                                 style="object-fit: cover;"
+                                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default_candidate.jpg') }}'">
+                                            {% else %}
+                                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 text-secondary">
+                                                <i class="fas fa-user fa-4x"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <h3 class="h4 text-white mb-2">{{ candidate.name }}</h3>
+                                        <div class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 px-3 py-2">
+                                            {{ candidate.party }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="text-center mt-5 pt-4 border-top border-secondary">
+                        <div class="alert alert-warning bg-warning bg-opacity-10 border-warning border-opacity-25 text-warning d-inline-block px-4 py-3 mb-4 animate__animated animate__pulse animate__infinite">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> Your vote will be recorded permanently on the blockchain and cannot be changed.
+                        </div>
+                        
+                        <div class="d-grid gap-3 d-md-block">
+                            <a href="{{ url_for('voting') }}" class="btn btn-outline-secondary btn-lg px-5 me-md-3">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg px-5 pulse-glow" id="castVoteBtn">
+                                <i class="fas fa-vote-yea me-2"></i>Submit Official Vote
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center">
+                    <p class="text-muted">No candidates available for voting at this time.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Return to Home
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('voting-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const selectedCandidate = document.querySelector('input[name="candidate"]:checked');
+            if (!selectedCandidate) {
+                e.preventDefault();
+                alert('Please select a candidate before casting your vote.');
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

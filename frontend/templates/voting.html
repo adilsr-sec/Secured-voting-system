@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Voting - Secure Voting System{% endblock %}
+
+{% block content %}
+<style>
+.camera-container {
+    width: 100%;
+    max-width: 480px;
+    height: 360px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.15);
+    border: 2px solid rgba(255,255,255,0.05);
+    background: #000;
+}
+
+#videoElement {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.capture-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
+
+.face-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 220px;
+    border: 2px dashed rgba(16, 185, 129, 0.8);
+    border-radius: 50%;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    animation: pulseBorder 2s infinite;
+}
+
+@keyframes pulseBorder {
+    0% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 15px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+#canvasElement {
+    display: none;
+}
+
+#capturedImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 768px) {
+    .camera-container {
+        height: 300px;
+    }
+    .face-guide {
+        width: 160px;
+        height: 160px;
+    }
+}
+</style>
+
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card glass-panel delay-100 animate__animated animate__fadeInUp">
+                <div class="card-header bg-transparent border-bottom border-secondary pt-4 pb-3 text-center">
+                    <h4 class="mb-0 text-success"><i class="fas fa-fingerprint me-2"></i>Secure Voter Verification</h4>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category if category != 'message' else 'info' }} animate__animated animate__shakeX">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" id="votingForm">
+                        <div class="mb-4">
+                            <label for="voter_id" class="form-label text-secondary fw-bold">Voter ID Sequence</label>
+                            <input type="text" class="form-control form-control-lg" id="voter_id" name="voter_id" 
+                                   value="{{ voter_id }}" required {% if voter_id %}readonly{% endif %}
+                                   placeholder="e.g., ABC123" style="font-family: monospace; letter-spacing: 2px;">
+                            <div class="form-text text-muted">
+                                Format: 3 letters followed by 3 numbers
+                            </div>
+                        </div>
+
+                        {% if show_face %}
+                        <!-- Face Recognition Section -->
+                        <div class="face-recognition-section mb-5">
+                            <label class="form-label text-secondary fw-bold">Biometric Face Scan</label>
+                            <div class="alert alert-info border-0 bg-dark bg-opacity-50">
+                                <ul class="mb-0 small text-light">
+                                    <li>Ensure good lighting on your face</li>
+                                    <li>Look directly at the camera</li>
+                                    <li>Align your face within the targeting guide</li>
+                                </ul>
+                            </div>
+                            <div class="camera-container mb-4">
+                                <video id="videoElement" autoplay playsinline></video>
+                                <div class="capture-overlay">
+                                    <div class="face-guide"></div>
+                                    <div class="scan-line"></div>
+                                </div>
+                                <canvas id="canvasElement"></canvas>
+                                <img id="capturedImage" style="display: none;">
+                            </div>
+                            <input type="hidden" name="photo_data" id="photoData">
+                            <div class="d-grid gap-3">
+                                <button type="button" class="btn btn-primary btn-lg pulse-glow" id="startButton">
+                                    <i class="fas fa-camera me-2"></i> Initialize Camera
+                                </button>
+                                <button type="button" class="btn btn-success btn-lg pulse-glow" id="captureButton" style="display: none;">
+                                    <i class="fas fa-expand me-2"></i> Capture Biometrics
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-lg" id="retakeButton" style="display: none;">
+                                    <i class="fas fa-redo me-2"></i> Retake Scan
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if show_otp %}
+                        <!-- OTP Section -->
+                        <div class="otp-section mb-4 animate__animated animate__fadeIn">
+                            <div class="mb-3">
+                                <label for="otp" class="form-label text-secondary fw-bold">Authorization Code (OTP)</label>
+                                <input type="text" class="form-control form-control-lg text-center" id="otp" name="otp" required
+                                       placeholder="----" style="font-family: monospace; font-size: 1.5rem; letter-spacing: 8px;">
+                                <div class="form-text text-warning mt-2 text-center">
+                                    <i class="fas fa-info-circle"></i> Testing override code: 2345
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-3 mt-4 pt-3 border-top border-secondary">
+                            <button type="submit" class="btn btn-success btn-lg" id="verifyButton">
+                                <i class="fas fa-shield-check me-2"></i> Verify & Proceed
+                            </button>
+                            {% if not voter_id %}
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='/voting'">
+                                <i class="fas fa-undo me-2"></i> Reset Form
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Verifying your identity...</h5>
+                <p class="text-muted mb-0">Please wait while we process your verification.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoElement = document.getElementById('videoElement');
+    const canvasElement = document.getElementById('canvasElement');
+    const capturedImage = document.getElementById('capturedImage');
+    const photoData = document.getElementById('photoData');
+    const startButton = document.getElementById('startButton');
+    const captureButton = document.getElementById('captureButton');
+    const retakeButton = document.getElementById('retakeButton');
+    const votingForm = document.getElementById('votingForm');
+    let stream = null;
+
+    // Auto-focus on the appropriate input
+    const voterId = document.getElementById('voter_id');
+    const otp = document.getElementById('otp');
+    
+    if (otp && voterId.value) {
+        otp.focus();
+    } else if (voterId && !voterId.value) {
+        voterId.focus();
+    }
+    
+    // Format voter ID input
+    if (voterId) {
+        voterId.addEventListener('input', function() {
+            let value = this.value.toUpperCase();
+            if (value.length > 6) {
+                value = value.slice(0, 6);
+            }
+            this.value = value;
+        });
+    }
+
+    // Start camera
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+            videoElement.srcObject = stream;
+            videoElement.style.display = 'block';
+            capturedImage.style.display = 'none';
+            startButton.style.display = 'none';
+            captureButton.style.display = 'block';
+            retakeButton.style.display = 'none';
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            alert('Error accessing camera. Please ensure camera permissions are granted and try again.');
+        }
+    }
+
+    // Capture photo
+    function capturePhoto() {
+        const context = canvasElement.getContext('2d');
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+        context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+        
+        const imageData = canvasElement.toDataURL('image/jpeg');
+        capturedImage.src = imageData;
+        photoData.value = imageData;
+        
+        videoElement.style.display = 'none';
+        capturedImage.style.display = 'block';
+        captureButton.style.display = 'none';
+        retakeButton.style.display = 'block';
+        
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    }
+
+    // Event listeners
+    if (startButton) {
+        startButton.addEventListener('click', startCamera);
+    }
+    
+    if (captureButton) {
+        captureButton.addEventListener('click', capturePhoto);
+    }
+    
+    if (retakeButton) {
+        retakeButton.addEventListener('click', function() {
+            capturedImage.style.display = 'none';
+            retakeButton.style.display = 'none';
+            startCamera();
+        });
+    }
+
+    // Form submission
+    if (votingForm) {
+        votingForm.addEventListener('submit', function(e) {
+            if (photoData.value || document.getElementById('otp')) {
+                const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+                loadingModal.show();
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

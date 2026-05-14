@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Voter Blockchain History - Secure Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Blockchain History for Voter: {{ voter.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Voter ID:</strong> {{ voter.voter_id }}
+                    </div>
+
+                    <div class="timeline">
+                        {% for transaction in history %}
+                        <div class="timeline-item">
+                            <div class="card mb-3 {% if transaction.type == 'voter_registration' %}border-primary{% else %}border-success{% endif %}">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        {% if transaction.type == 'voter_registration' %}
+                                        <i class="fas fa-user-plus text-primary"></i> Voter Registration
+                                        {% else %}
+                                        <i class="fas fa-vote-yea text-success"></i> Vote Cast
+                                        {% endif %}
+                                    </h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Timestamp: {{ transaction.timestamp|datetime }}
+                                        </small>
+                                    </p>
+                                    
+                                    {% if transaction.type == 'voter_registration' %}
+                                    <div class="mt-2">
+                                        <p class="mb-1"><strong>Name:</strong> {{ transaction.data.name }}</p>
+                                        <p class="mb-1"><strong>Age:</strong> {{ transaction.data.age }}</p>
+                                        <p class="mb-1"><strong>District:</strong> {{ transaction.data.district }}</p>
+                                        <p class="mb-1"><strong>State:</strong> {{ transaction.data.state }}</p>
+                                        <p class="mb-1"><strong>Data Hash:</strong> <code>{{ transaction.data.data_hash }}</code></p>
+                                    </div>
+                                    {% else %}
+                                    <div class="mt-2">
+                                        <p class="mb-1"><strong>Vote Hash:</strong> <code>{{ transaction.data.vote_hash }}</code></p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if not history %}
+                    <div class="alert alert-warning">
+                        No blockchain records found for this voter.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item:after {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 20px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #007bff;
+}
+</style>
+{% endblock %} 
