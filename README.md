@@ -1,4 +1,4 @@
-# 🗳️ Secured Voting System
+# 🗳️ Secured Voting System Using Blockchain
 
 A comprehensive, secure, and transparent electronic voting system built with Flask backend and modern web technologies. Integrates blockchain technology for immutable vote recording and advanced biometric authentication using facial recognition.
 
