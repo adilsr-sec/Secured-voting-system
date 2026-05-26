@@ -707,48 +707,7 @@ CREATE TABLE scanner_session (
 - [ ] Implement end-to-end encryption
 - [ ] Add audit log persistence
 - [ ] Implement distributed blockchain network
-
----
-
-##  Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork the Repository**
-   ```bash
-   git clone https://github.com/your-username/Secured-voting-system.git
-   ```
-
-2. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-3. **Make Changes & Commit**
-   ```bash
-   git commit -m "Add your feature description"
-   ```
-
-4. **Push to Branch**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. **Open Pull Request**
-   - Provide clear description of changes
-   - Include testing details
-   - Reference related issues
-
-### **Contribution Areas**
-- Security enhancements
-- Performance optimization
-- UI/UX improvements
-- Documentation
-- Bug fixes
-- Feature additions
-
----
-
+- [ ] 
 ##  License
 
 This project is licensed under the **MIT License** - see the LICENSE file for details.
