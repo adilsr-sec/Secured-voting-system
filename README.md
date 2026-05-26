@@ -1,8 +1,8 @@
-# 🗳️ Secured Voting System Using Blockchain
+#  Secured Voting System Using Blockchain
 
 A comprehensive, secure, and transparent electronic voting system built with Flask backend and modern web technologies. Integrates blockchain technology for immutable vote recording and advanced biometric authentication using facial recognition.
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#-overview)
 - [Architecture](#-architecture)
@@ -23,7 +23,7 @@ A comprehensive, secure, and transparent electronic voting system built with Fla
 
 ---
 
-## 🎯 Overview
+##  Overview
 
 This project implements a state-of-the-art voting system designed to ensure **integrity**, **transparency**, and **security** in the electoral process. The system combines:
 
@@ -35,7 +35,7 @@ This project implements a state-of-the-art voting system designed to ensure **in
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────┐
@@ -61,7 +61,7 @@ This project implements a state-of-the-art voting system designed to ensure **in
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### **Frontend**
 - **HTML5**: Semantic markup with Bootstrap framework
@@ -87,9 +87,9 @@ This project implements a state-of-the-art voting system designed to ensure **in
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🔐 Security Features
+###  Security Features
 - **Facial Recognition Authentication**: AI-powered face detection and verification using OpenCV
 - **Blockchain Integration**: Immutable voting records with cryptographic hashing
 - **Password Hashing**: Werkzeug-based secure password storage
@@ -98,21 +98,21 @@ This project implements a state-of-the-art voting system designed to ensure **in
 - **HTTPS Ready**: Support for secure communication
 - **Session Management**: Secure session handling with auto-logout
 
-### 👤 Voter Management
+###  Voter Management
 - **Registration**: Multi-step registration with facial capture
 - **Voter ID Generation**: Auto-generated 6-character voter IDs (format: ABC123)
 - **Voter ID Card**: PDF-based ID cards with QR codes
 - **Duplicate Prevention**: Aadhar number, email, and phone validation
 - **Disability Support**: Special considerations for voters with disabilities
 
-### 🗳️ Voting Features
+###  Voting Features
 - **Secure Vote Casting**: Face-verified voting with encrypted records
 - **Candidate Management**: Add and manage election candidates with photos
 - **Vote Encryption**: SHA-256 hashing of vote data
 - **Prevention of Double Voting**: One-time vote validation per voter
 - **Blockchain Recording**: Every vote recorded on blockchain
 
-### 📊 Analytics & Reporting
+###  Analytics & Reporting
 - **Real-time Results Dashboard**: Live vote count and percentages
 - **Demographic Statistics**:
   - Age group voting patterns
@@ -122,21 +122,21 @@ This project implements a state-of-the-art voting system designed to ensure **in
 - **Voter Analytics**: Comprehensive voter statistics and distribution
 - **PDF Export**: Election results and blockchain data export
 
-### ⛓️ Blockchain Features
+###  Blockchain Features
 - **Proof-of-Work Mining**: Difficulty-based block mining
 - **Transaction Recording**: Voter registration and vote casting records
 - **Chain Validation**: Cryptographic chain integrity verification
 - **Blockchain Explorer**: View blockchain status and verify transactions
 - **History Tracking**: Complete transaction history per voter
 
-### 📱 Multi-Device Support
+###  Multi-Device Support
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Mobile Scanner**: Fingerprint scanner interface for mobile devices
 - **Camera Integration**: Webcam and mobile camera support
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 Secured-voting-system/
@@ -193,7 +193,7 @@ Secured-voting-system/
 
 ---
 
-## 🔧 Backend Analysis
+##  Backend Analysis
 
 ### **Main Application File: `app.py`**
 
@@ -315,7 +315,7 @@ Blockchain()
 
 ---
 
-## 🎨 Frontend Analysis
+##  Frontend Analysis
 
 ### **Template Structure**
 
@@ -418,7 +418,7 @@ Blockchain()
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### **Prerequisites**
 ```bash
@@ -484,7 +484,7 @@ The application auto-initializes on first run:
 
 ---
 
-## 💾 Database Schema
+##  Database Schema
 
 ### **Tables Overview**
 
@@ -545,7 +545,7 @@ CREATE TABLE scanner_session (
 
 ---
 
-## 🔌 API Routes
+##  API Routes
 
 ### **Authentication Routes**
 - `POST /admin/login` - Admin login with credentials
@@ -580,11 +580,11 @@ CREATE TABLE scanner_session (
 
 ---
 
-## 🔐 Security Considerations
+##  Security Considerations
 
 ### **Implementation Details**
 
-✅ **Implemented**
+ **Implemented**
 - Password hashing using Werkzeug
 - SQL injection prevention via SQLAlchemy ORM
 - CSRF protection via session management
@@ -595,7 +595,7 @@ CREATE TABLE scanner_session (
 - Session timeouts
 - IP address logging
 
-⚠️ **Recommendations for Production**
+ **Recommendations for Production**
 - Implement HTTPS/SSL certificates
 - Use environment variables for secrets (not hardcoded)
 - Implement rate limiting on authentication endpoints
@@ -609,7 +609,7 @@ CREATE TABLE scanner_session (
 
 ---
 
-## 📖 Usage Guide
+##  Usage Guide
 
 ### **For Voters**
 
@@ -660,7 +660,7 @@ CREATE TABLE scanner_session (
 
 ---
 
-## ⛓️ Blockchain Integration
+##  Blockchain Integration
 
 ### **How It Works**
 
@@ -687,7 +687,7 @@ CREATE TABLE scanner_session (
 
 ---
 
-## 🐛 Known Issues & Limitations
+##  Known Issues & Limitations
 
 ### **Current Limitations**
 - [ ] Default credentials stored in code (should use environment variables)
@@ -710,7 +710,7 @@ CREATE TABLE scanner_session (
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -749,7 +749,7 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License** - see the LICENSE file for details.
 
@@ -769,16 +769,16 @@ copies or substantial portions of the Software.
 
 ---
 
-## 👤 Author
+##  Author
 
 **adilsr-sec** - Security & Development Focus
 
-- 🔗 [GitHub Profile](https://github.com/adilsr-sec)
-- 📧 Contact via GitHub Issues
+-  [GitHub Profile](https://github.com/adilsr-sec)
+-  Contact via GitHub Issues
 
 ---
 
-## 📞 Support & Contact
+##  Support & Contact
 
 For questions, suggestions, or bug reports:
 
@@ -797,7 +797,7 @@ For questions, suggestions, or bug reports:
 
 ---
 
-## 📚 Learning Resources
+##  Learning Resources
 
 ### **Security & Voting Systems**
 - [OWASP Voting System Security](https://owasp.org/)
@@ -825,37 +825,37 @@ For questions, suggestions, or bug reports:
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
-### **Phase 1: Core Features** ✅
+### **Phase 1: Core Features** 
 - [x] Voter registration with face capture
 - [x] Secure voting interface
 - [x] Blockchain integration
 - [x] Admin dashboard
 - [x] Results reporting
 
-### **Phase 2: Enhancement** 🔄
+### **Phase 2: Enhancement** 
 - [ ] Implement biometric fingerprint authentication
 - [ ] Add multi-language support
 - [ ] Enhance encryption protocols
 - [ ] Real-time result updates with WebSockets
 - [ ] Email notification system
 
-### **Phase 3: Scalability** 📊
+### **Phase 3: Scalability** 
 - [ ] Distributed blockchain network
 - [ ] Microservices architecture
 - [ ] Database clustering
 - [ ] Load balancing
 - [ ] API rate limiting
 
-### **Phase 4: Mobile** 📱
+### **Phase 4: Mobile** 
 - [ ] Native mobile application (iOS/Android)
 - [ ] Offline voting capability
 - [ ] Mobile-optimized interface
 - [ ] Push notifications
 - [ ] Biometric fingerprint scanner
 
-### **Phase 5: Integration** 🔗
+### **Phase 5: Integration** 
 - [ ] Government ID database integration
 - [ ] Electoral database sync
 - [ ] Multi-election support
@@ -864,7 +864,7 @@ For questions, suggestions, or bug reports:
 
 ---
 
-## 📊 Statistics
+##  Statistics
 
 ### **Codebase**
 - **Backend**: ~1,430 lines of Python
@@ -882,7 +882,7 @@ For questions, suggestions, or bug reports:
 
 ---
 
-## ⚡ Performance Notes
+##  Performance Notes
 
 - **Database**: SQLite optimized for single-server deployment
 - **Face Recognition**: ~500ms per comparison
@@ -892,7 +892,7 @@ For questions, suggestions, or bug reports:
 
 ---
 
-## 🔄 System Flow
+##  System Flow
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
